@@ -23,7 +23,7 @@ export function json(body: unknown, status = 200) {
 export function bearer(request: Request): string | null {
   const h = request.headers.get("authorization") ?? "";
   const m = h.match(/^Bearer\s+(tdk_[a-f0-9]{64})$/i);
-  return m ? m[1] : null;
+  return m?.[1] ?? null;
 }
 
 /** Resolve the device for a request's device key, or null. Updates last_seen. */
