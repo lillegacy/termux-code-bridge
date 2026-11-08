@@ -22,3 +22,44 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Gateway bridge contract
+
+This web app is designed to orchestrate a separate Android or CLI gateway that owns the SSH session.
+The gateway is expected to expose a small JSON API for pairing, status, execution, and result reporting.
+
+### Core contract
+
+```ts
+// Example gateway client usage
+import { createGatewayClient } from "@/lib/gateway-client";
+
+const gateway = createGatewayClient("https://gateway.local", process.env.GATEWAY_API_TOKEN);
+
+const health = await gateway.health();
+const exec = await gateway.execute({ command: "uname -a", timeoutMs: 15000 });
+```
+
+Endpoints the gateway should support:
+
+- `GET /health`
+- `POST /connect`
+- `POST /execute`
+- `POST /disconnect`
+- `POST /result`
+
+Example payloads:
+
+```json
+{ "host": "100.x.x.x", "port": 8022, "username": "u0_a123", "password": "secret" }
+```
+
+```json
+{ "command": "pwd && whoami", "timeoutMs": 20000, "cwd": "/data/data/com.termux/files/home" }
+```
+
+```json
+{ "ok": true, "exitCode": 0, "stdout": "...", "stderr": "", "timestamp": "2026-11-08T11:00:00Z" }
+```
+
+The web app should treat the gateway as a remote execution service instead of directly handling SSH or Termux details.
