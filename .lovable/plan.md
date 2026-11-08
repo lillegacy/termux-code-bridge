@@ -15,6 +15,8 @@ A web dashboard where you sign in, link your devices/apps to your account, and s
 [Dashboard] shows live status + command output
 ```
 
+**Your app is always in charge.** The dashboard is only a command hub: it can suggest commands, but the app decides whether to run them, and the app can unlink itself at any time (which instantly revokes its key). The pairing step on your app's side can be added later — the dashboard will be ready and waiting.
+
 The web dashboard can't open SSH to your phone directly (phones sit behind home/mobile networks), so your app "calls home" instead. This works anywhere with internet, no port forwarding.
 
 ## What you'll get
@@ -37,6 +39,7 @@ Dark terminal-inspired look: near-black background, phosphor-green accent, monos
 - Device API as public server routes, authenticated by device key (hashed, compared server-side):
   - `POST /api/public/device/pair` — code -> device key (shown once)
   - `GET /api/public/device/poll` — returns next queued commands, updates last_seen
-  - `POST /api/public/device/result` — posts output/exit code
+  - `POST /api/public/device/result` — posts output/exit code (or "rejected" if the app declines)
+  - `POST /api/public/device/unlink` — app removes itself; key revoked, pending commands cancelled
 - Dashboard uses protected server functions; command list refreshes automatically.
 - Your existing app needs a small addition: store the device key and run a poll loop.
