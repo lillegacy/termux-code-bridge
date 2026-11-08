@@ -10,33 +10,147 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DocsRouteImport } from './routes/docs'
+import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
+import { Route as AuthenticatedDevicesIdRouteImport } from './routes/_authenticated/devices_.$id'
+import { Route as ApiPublicDevicePairRouteImport } from './routes/api/public/device/pair'
+import { Route as ApiPublicDevicePollRouteImport } from './routes/api/public/device/poll'
+import { Route as ApiPublicDeviceResultRouteImport } from './routes/api/public/device/result'
+import { Route as ApiPublicDeviceUnlinkRouteImport } from './routes/api/public/device/unlink'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDevicesRoute = AuthenticatedDevicesRouteImport.update({
+  id: '/devices',
+  path: '/devices',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDevicesIdRoute = AuthenticatedDevicesIdRouteImport.update({
+  id: '/devices_/$id',
+  path: '/devices/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicDevicePairRoute = ApiPublicDevicePairRouteImport.update({
+  id: '/api/public/device/pair',
+  path: '/api/public/device/pair',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDevicePollRoute = ApiPublicDevicePollRouteImport.update({
+  id: '/api/public/device/poll',
+  path: '/api/public/device/poll',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDeviceResultRoute = ApiPublicDeviceResultRouteImport.update({
+  id: '/api/public/device/result',
+  path: '/api/public/device/result',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDeviceUnlinkRoute = ApiPublicDeviceUnlinkRouteImport.update({
+  id: '/api/public/device/unlink',
+  path: '/api/public/device/unlink',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/docs': typeof DocsRoute
+  '/devices': typeof AuthenticatedDevicesRoute
+  '/devices/$id': typeof AuthenticatedDevicesIdRoute
+  '/api/public/device/pair': typeof ApiPublicDevicePairRoute
+  '/api/public/device/poll': typeof ApiPublicDevicePollRoute
+  '/api/public/device/result': typeof ApiPublicDeviceResultRoute
+  '/api/public/device/unlink': typeof ApiPublicDeviceUnlinkRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/docs': typeof DocsRoute
+  '/devices': typeof AuthenticatedDevicesRoute
+  '/devices/$id': typeof AuthenticatedDevicesIdRoute
+  '/api/public/device/pair': typeof ApiPublicDevicePairRoute
+  '/api/public/device/poll': typeof ApiPublicDevicePollRoute
+  '/api/public/device/result': typeof ApiPublicDeviceResultRoute
+  '/api/public/device/unlink': typeof ApiPublicDeviceUnlinkRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/docs': typeof DocsRoute
+  '/_authenticated/devices': typeof AuthenticatedDevicesRoute
+  '/_authenticated/devices_/$id': typeof AuthenticatedDevicesIdRoute
+  '/api/public/device/pair': typeof ApiPublicDevicePairRoute
+  '/api/public/device/poll': typeof ApiPublicDevicePollRoute
+  '/api/public/device/result': typeof ApiPublicDeviceResultRoute
+  '/api/public/device/unlink': typeof ApiPublicDeviceUnlinkRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/docs'
+    | '/devices'
+    | '/devices/$id'
+    | '/api/public/device/pair'
+    | '/api/public/device/poll'
+    | '/api/public/device/result'
+    | '/api/public/device/unlink'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/docs'
+    | '/devices'
+    | '/devices/$id'
+    | '/api/public/device/pair'
+    | '/api/public/device/poll'
+    | '/api/public/device/result'
+    | '/api/public/device/unlink'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/docs'
+    | '/_authenticated/devices'
+    | '/_authenticated/devices_/$id'
+    | '/api/public/device/pair'
+    | '/api/public/device/poll'
+    | '/api/public/device/result'
+    | '/api/public/device/unlink'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  DocsRoute: typeof DocsRoute
+  ApiPublicDevicePairRoute: typeof ApiPublicDevicePairRoute
+  ApiPublicDevicePollRoute: typeof ApiPublicDevicePollRoute
+  ApiPublicDeviceResultRoute: typeof ApiPublicDeviceResultRoute
+  ApiPublicDeviceUnlinkRoute: typeof ApiPublicDeviceUnlinkRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +162,94 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/devices': {
+      id: '/_authenticated/devices'
+      path: '/devices'
+      fullPath: '/devices'
+      preLoaderRoute: typeof AuthenticatedDevicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/devices_/$id': {
+      id: '/_authenticated/devices_/$id'
+      path: '/devices/$id'
+      fullPath: '/devices/$id'
+      preLoaderRoute: typeof AuthenticatedDevicesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/device/pair': {
+      id: '/api/public/device/pair'
+      path: '/api/public/device/pair'
+      fullPath: '/api/public/device/pair'
+      preLoaderRoute: typeof ApiPublicDevicePairRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/device/poll': {
+      id: '/api/public/device/poll'
+      path: '/api/public/device/poll'
+      fullPath: '/api/public/device/poll'
+      preLoaderRoute: typeof ApiPublicDevicePollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/device/result': {
+      id: '/api/public/device/result'
+      path: '/api/public/device/result'
+      fullPath: '/api/public/device/result'
+      preLoaderRoute: typeof ApiPublicDeviceResultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/device/unlink': {
+      id: '/api/public/device/unlink'
+      path: '/api/public/device/unlink'
+      fullPath: '/api/public/device/unlink'
+      preLoaderRoute: typeof ApiPublicDeviceUnlinkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
+  AuthenticatedDevicesIdRoute: typeof AuthenticatedDevicesIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
+  AuthenticatedDevicesIdRoute: AuthenticatedDevicesIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  DocsRoute: DocsRoute,
+  ApiPublicDevicePairRoute: ApiPublicDevicePairRoute,
+  ApiPublicDevicePollRoute: ApiPublicDevicePollRoute,
+  ApiPublicDeviceResultRoute: ApiPublicDeviceResultRoute,
+  ApiPublicDeviceUnlinkRoute: ApiPublicDeviceUnlinkRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
