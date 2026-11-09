@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as GatewayRouteImport } from './routes/gateway'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDevicesIdRouteImport } from './routes/_authenticated/devices_.$id'
 import { Route as ApiPublicDevicePairRouteImport } from './routes/api/public/device/pair'
@@ -37,6 +38,11 @@ const AuthRoute = AuthRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GatewayRoute = GatewayRouteImport.update({
+  id: '/gateway',
+  path: '/gateway',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedDevicesRoute = AuthenticatedDevicesRouteImport.update({
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/docs': typeof DocsRoute
+  '/gateway': typeof GatewayRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/devices/$id': typeof AuthenticatedDevicesIdRoute
   '/api/public/device/pair': typeof ApiPublicDevicePairRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/docs': typeof DocsRoute
+  '/gateway': typeof GatewayRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/devices/$id': typeof AuthenticatedDevicesIdRoute
   '/api/public/device/pair': typeof ApiPublicDevicePairRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/docs': typeof DocsRoute
+  '/gateway': typeof GatewayRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/devices_/$id': typeof AuthenticatedDevicesIdRoute
   '/api/public/device/pair': typeof ApiPublicDevicePairRoute
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/docs'
+    | '/gateway'
     | '/devices'
     | '/devices/$id'
     | '/api/public/device/pair'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/docs'
+    | '/gateway'
     | '/devices'
     | '/devices/$id'
     | '/api/public/device/pair'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/docs'
+    | '/gateway'
     | '/_authenticated/devices'
     | '/_authenticated/devices_/$id'
     | '/api/public/device/pair'
@@ -147,6 +159,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DocsRoute: typeof DocsRoute
+  GatewayRoute: typeof GatewayRoute
   ApiPublicDevicePairRoute: typeof ApiPublicDevicePairRoute
   ApiPublicDevicePollRoute: typeof ApiPublicDevicePollRoute
   ApiPublicDeviceResultRoute: typeof ApiPublicDeviceResultRoute
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gateway': {
+      id: '/gateway'
+      path: '/gateway'
+      fullPath: '/gateway'
+      preLoaderRoute: typeof GatewayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/devices': {
@@ -246,6 +266,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DocsRoute: DocsRoute,
+  GatewayRoute: GatewayRoute,
   ApiPublicDevicePairRoute: ApiPublicDevicePairRoute,
   ApiPublicDevicePollRoute: ApiPublicDevicePollRoute,
   ApiPublicDeviceResultRoute: ApiPublicDeviceResultRoute,

@@ -34,7 +34,8 @@ The bridge exposes a small HTTP JSON API that is already modeled by the phone ap
 // Example gateway client usage against the phone app
 import { createGatewayClient } from "@/lib/gateway-client";
 
-const gateway = createGatewayClient("http://127.0.0.1:8765", process.env.GATEWAY_API_TOKEN);
+// Get the token from the phone app; avoid hard-coding it or exposing it in a build-time env var.
+const gateway = createGatewayClient("http://127.0.0.1:8765", tokenEnteredByUser);
 
 const health = await gateway.health();
 await gateway.connect({ profile: "Default Tailscale Termux" });
@@ -47,8 +48,6 @@ The gateway app expects these endpoints and payloads:
 - `POST /connect` -> body is `{ "profile": "Default Tailscale Termux" }`
 - `POST /execute` -> body is `{ "command": "uname -a" }`
 - `POST /disconnect` -> closes the active SSH connection
-
-The client stays compatible with the older host/port shape as a fallback, but it now normalizes requests to the phone app's `profile`-based contract so the browser app can talk to the bridge correctly.
 
 Example response from the phone gateway:
 
@@ -65,9 +64,18 @@ Example response from the phone gateway:
 ```json
 {
   "ok": true,
-  "stdout": "Linux termux 6.1.0-aarch64
-",
+  "stdout": "Linux termux 6.1.0-aarch64\n",
   "stderr": "",
   "exitCode": 0
 }
 ```
+
+Open the **Gateway** console in the web app, enter the URL and bearer token
+shown in the phone app's API tab, then enter a stored profile name to connect.
+The token remains in browser memory unless you explicitly opt in to remembering
+it. A hosted HTTPS page cannot call a remote plain-HTTP gateway; use an HTTPS
+tunnel/reverse proxy or a local SSH tunnel. The phone gateway enforces its own
+command allowlist.
+
+The **Devices** dashboard is a separate cloud command-queue feature and does
+not connect to the phone app's gateway API.

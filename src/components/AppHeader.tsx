@@ -30,6 +30,7 @@ export function AppHeader() {
           <Terminal className="h-4 w-4" /> termux.hub
         </Link>
         <nav className="flex gap-4 text-sm text-muted-foreground">
+          <Link to="/gateway" activeProps={{ className: "text-foreground" }}>Gateway</Link>
           <Link to="/devices" activeProps={{ className: "text-foreground" }}>Devices</Link>
           <Link to="/docs" activeProps={{ className: "text-foreground" }}>Docs</Link>
         </nav>
