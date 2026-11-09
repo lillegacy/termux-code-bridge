@@ -46,7 +46,7 @@ export function buildGatewayHeaders(token?: string) {
   };
 
   if (token) {
-    headers.Authorization = `Bearer ${token}`;
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   return headers;
