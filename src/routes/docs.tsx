@@ -76,8 +76,11 @@ function Docs() {
               Devices dashboard
             </Link>{" "}
             does not use the phone gateway API. It pairs an agent with a one-time code and queues
-            commands for that agent to poll and report. Its one-time code and resulting device key
-            are separate credentials and cannot replace the phone gateway API token.
+            commands for that agent to poll and report. The Termux SSH Bridge phone app supports
+            this flow from its API tab: it polls over HTTPS while open, runs commands through the
+            selected saved SSH profile, and applies the phone&apos;s command allowlist. Its one-time
+            code and resulting device key are separate credentials and cannot replace the phone
+            gateway API token.
           </p>
         </section>
 
