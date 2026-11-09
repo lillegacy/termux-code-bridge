@@ -1,55 +1,77 @@
-export type GatewayCommandStatus = "done" | "failed" | "rejected";
+// Client for the Termux SSH Bridge Gateway. Talks ONLY to the configured gateway URL.
+// Uses exactly four documented endpoints: /health, /connect, /execute, /disconnect.
 
 export interface GatewayHealthResponse {
-  ok: boolean;
+  ok?: boolean;
   connected?: boolean;
-  host?: string;
-  port?: number;
-  username?: string;
-  error?: string;
-  message?: string;
+  profile?: string;
+  [key: string]: unknown;
 }
 
 export interface GatewayConnectRequest {
-  host: string;
-  port: number;
-  username: string;
-  password: string;
+  profile: string;
 }
 
 export interface GatewayExecuteRequest {
   command: string;
-  timeoutMs?: number;
-  cwd?: string;
 }
 
 export interface GatewayExecuteResponse {
-  ok: boolean;
+  ok?: boolean;
   exitCode?: number;
   stdout?: string;
   stderr?: string;
-  timestamp?: string;
-  error?: string;
-  message?: string;
+  [key: string]: unknown;
 }
 
-export interface GatewayResultRequest {
-  commandId: string;
-  status: GatewayCommandStatus;
-  output?: string;
-  exitCode?: number;
+export type GatewayErrorKind = "unauthorized" | "forbidden" | "network" | "http" | "invalid_url";
+
+export class GatewayError extends Error {
+  kind: GatewayErrorKind;
+  status?: number;
+  code?: string;
+  constructor(kind: GatewayErrorKind, message: string, status?: number, code?: string) {
+    super(message);
+    this.name = "GatewayError";
+    this.kind = kind;
+    this.status = status;
+    this.code = code;
+  }
 }
 
 export function buildGatewayHeaders(token?: string) {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   return headers;
+}
+
+/** Extracts a message from the gateway JSON error envelope (flat or nested `error` object). */
+export function parseErrorEnvelope(data: unknown): { message?: string; code?: string } {
+  if (!data || typeof data !== "object") return typeof data === "string" && data ? { message: data } : {};
+  const d = data as Record<string, unknown>;
+  const err = d["error"];
+  if (err && typeof err === "object") {
+    const e = err as Record<string, unknown>;
+    return {
+      message: typeof e["message"] === "string" ? e["message"] : undefined,
+      code: typeof e["code"] === "string" ? e["code"] : undefined,
+    };
+  }
+  return {
+    message: typeof err === "string" ? err : typeof d["message"] === "string" ? (d["message"] as string) : undefined,
+    code: typeof d["code"] === "string" ? (d["code"] as string) : undefined,
+  };
+}
+
+/** True when an https page tries to call a plain-http, non-localhost gateway (browser will block it). */
+export function isMixedContent(pageProtocol: string, baseUrl: string) {
+  try {
+    const u = new URL(baseUrl);
+    if (pageProtocol !== "https:" || u.protocol !== "http:") return false;
+    return !["127.0.0.1", "localhost", "[::1]"].includes(u.hostname);
+  } catch {
+    return false;
+  }
 }
 
 export async function requestGateway<T>(
@@ -58,32 +80,44 @@ export async function requestGateway<T>(
   init: RequestInit = {},
   token?: string,
 ): Promise<T> {
-  const target = new URL(path, baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`).toString();
-  const response = await fetch(target, {
-    ...init,
-    headers: {
-      ...buildGatewayHeaders(token),
-      ...init.headers,
-    },
-  });
+  let target: string;
+  try {
+    target = new URL(path, baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`).toString();
+  } catch {
+    throw new GatewayError("invalid_url", "Gateway URL is not valid.");
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(target, { ...init, headers: { ...buildGatewayHeaders(token), ...init.headers } });
+  } catch {
+    throw new GatewayError(
+      "network",
+      "Could not reach the gateway. Check the URL, that the gateway is running, and browser mixed-content/CORS rules.",
+    );
+  }
 
   const text = await response.text();
-  let data: T | null = null;
-
+  let data: unknown = null;
   if (text) {
     try {
-      data = JSON.parse(text) as T;
+      data = JSON.parse(text);
     } catch {
-      data = text as unknown as T;
+      data = text;
     }
   }
 
   if (!response.ok) {
-    const payload = data as { error?: string; message?: string } | null;
-    throw new Error(payload?.error ?? payload?.message ?? `Gateway request failed (${response.status})`);
+    const { message, code } = parseErrorEnvelope(data);
+    const kind: GatewayErrorKind =
+      response.status === 401 ? "unauthorized" : response.status === 403 ? "forbidden" : "http";
+    const fallback =
+      kind === "unauthorized" ? "Unauthorized — check your bearer token." :
+      kind === "forbidden" ? "Forbidden by the gateway." : `Gateway request failed (${response.status}).`;
+    throw new GatewayError(kind, message ?? fallback, response.status, code);
   }
 
-  return (data ?? ({} as T)) as T;
+  return (data ?? {}) as T;
 }
 
 export function createGatewayClient(baseUrl: string, token?: string) {
@@ -93,8 +127,6 @@ export function createGatewayClient(baseUrl: string, token?: string) {
       requestGateway<GatewayHealthResponse>(baseUrl, "/connect", { method: "POST", body: JSON.stringify(payload) }, token),
     execute: (payload: GatewayExecuteRequest) =>
       requestGateway<GatewayExecuteResponse>(baseUrl, "/execute", { method: "POST", body: JSON.stringify(payload) }, token),
-    disconnect: () => requestGateway<{ ok: boolean }>(baseUrl, "/disconnect", { method: "POST" }, token),
-    submitResult: (payload: GatewayResultRequest) =>
-      requestGateway<{ ok: boolean }>(baseUrl, "/result", { method: "POST", body: JSON.stringify(payload) }, token),
+    disconnect: () => requestGateway<{ ok?: boolean }>(baseUrl, "/disconnect", { method: "POST" }, token),
   };
 }

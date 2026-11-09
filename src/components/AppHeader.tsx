@@ -31,6 +31,7 @@ export function AppHeader() {
         </Link>
         <nav className="flex gap-4 text-sm text-muted-foreground">
           <Link to="/devices" activeProps={{ className: "text-foreground" }}>Devices</Link>
+          <Link to="/gateway" activeProps={{ className: "text-foreground" }}>Gateway</Link>
           <Link to="/docs" activeProps={{ className: "text-foreground" }}>Docs</Link>
         </nav>
         <div className="ml-auto flex items-center gap-3">
