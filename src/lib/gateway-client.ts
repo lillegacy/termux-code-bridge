@@ -28,8 +28,8 @@ export type GatewayErrorKind = "unauthorized" | "forbidden" | "network" | "http"
 
 export class GatewayError extends Error {
   kind: GatewayErrorKind;
-  status?: number;
-  code?: string;
+  status?: number | undefined;
+  code?: string | undefined;
   constructor(kind: GatewayErrorKind, message: string, status?: number, code?: string) {
     super(message);
     this.name = "GatewayError";
@@ -46,7 +46,7 @@ export function buildGatewayHeaders(token?: string) {
 }
 
 /** Extracts a message from the gateway JSON error envelope (flat or nested `error` object). */
-export function parseErrorEnvelope(data: unknown): { message?: string; code?: string } {
+export function parseErrorEnvelope(data: unknown): { message?: string | undefined; code?: string | undefined } {
   if (!data || typeof data !== "object") return typeof data === "string" && data ? { message: data } : {};
   const d = data as Record<string, unknown>;
   const err = d["error"];

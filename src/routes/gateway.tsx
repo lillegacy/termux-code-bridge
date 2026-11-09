@@ -25,7 +25,7 @@ export const Route = createFileRoute("/gateway")({
 
 type Status = "offline" | "connecting" | "online";
 type Entry =
-  | { id: number; kind: "result"; command: string; at: string; stdout: string; stderr: string; exitCode?: number }
+  | { id: number; kind: "result"; command: string; at: string; stdout: string; stderr: string; exitCode?: number | undefined }
   | { id: number; kind: "error"; command: string; at: string; message: string };
 
 const URL_KEY = "gw.url";
