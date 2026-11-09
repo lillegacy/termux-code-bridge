@@ -26,22 +26,37 @@ export function AppHeader() {
   return (
     <header className="border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-4">
-        <Link to="/" className="flex items-center gap-2 font-mono text-sm font-semibold text-primary">
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-mono text-sm font-semibold text-primary"
+        >
           <Terminal className="h-4 w-4" /> termux.hub
         </Link>
         <nav className="flex gap-4 text-sm text-muted-foreground">
-          <Link to="/gateway" activeProps={{ className: "text-foreground" }}>Gateway</Link>
-          <Link to="/devices" activeProps={{ className: "text-foreground" }}>Devices</Link>
-          <Link to="/docs" activeProps={{ className: "text-foreground" }}>Docs</Link>
+          <Link to="/gateway" activeProps={{ className: "text-foreground" }}>
+            Gateway
+          </Link>
+          <Link to="/devices" activeProps={{ className: "text-foreground" }}>
+            Devices
+          </Link>
+          <Link to="/docs" activeProps={{ className: "text-foreground" }}>
+            Docs
+          </Link>
         </nav>
         <div className="ml-auto flex items-center gap-3">
           {email ? (
             <>
-              <span className="hidden font-mono text-xs text-muted-foreground sm:inline">{email}</span>
-              <Button size="sm" variant="outline" onClick={signOut}>Sign out</Button>
+              <span className="hidden font-mono text-xs text-muted-foreground sm:inline">
+                {email}
+              </span>
+              <Button size="sm" variant="outline" onClick={signOut}>
+                Sign out
+              </Button>
             </>
           ) : (
-            <Button size="sm" asChild><Link to="/auth">Sign in</Link></Button>
+            <Button size="sm" asChild>
+              <Link to="/auth">Sign in</Link>
+            </Button>
           )}
         </div>
       </div>
