@@ -297,6 +297,9 @@ function ConsolePage() {
                   value={bridgeCmd}
                   onChange={(e) => setBridgeCmd(e.target.value)}
                   placeholder="tmux ls"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   className="border-0 bg-transparent font-mono shadow-none focus-visible:ring-0"
                 />
               </div>
@@ -362,6 +365,9 @@ function ConsolePage() {
               value={cmd}
               onChange={(e) => setCmd(e.target.value)}
               placeholder="ls -la ~"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               className="border-0 bg-transparent font-mono shadow-none focus-visible:ring-0"
             />
           </div>

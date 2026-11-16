@@ -323,6 +323,9 @@ function GatewayPage() {
                 disabled={status !== "online"}
                 placeholder={status === "online" ? "whoami" : "connect first"}
                 aria-label="Command"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 className="border-0 bg-transparent font-mono shadow-none focus-visible:ring-0"
               />
             </div>
