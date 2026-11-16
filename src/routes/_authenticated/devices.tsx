@@ -40,7 +40,19 @@ export const Route = createFileRoute("/_authenticated/devices")({
   component: DevicesPage,
 });
 
-const emptyForm = { url: "", token: "", profile: "", pin: "" };
+const DEFAULT_GATEWAY_URL = "http://127.0.0.1:8765";
+
+/** Mirrors the defaults the standalone Gateway console already remembers. */
+function gatewayDefaults() {
+  if (typeof window === "undefined") {
+    return { url: DEFAULT_GATEWAY_URL, token: "", profile: "" };
+  }
+  return {
+    url: window.localStorage.getItem("gw.url") ?? DEFAULT_GATEWAY_URL,
+    token: window.localStorage.getItem("gw.token") ?? "",
+    profile: window.localStorage.getItem("gw.profile") ?? "",
+  };
+}
 
 function DevicesPage() {
   const { data: devices } = useSuspenseQuery(devicesQuery);
@@ -50,7 +62,7 @@ function DevicesPage() {
   const remove = useServerFn(removeDevice);
   const [code, setCode] = useState<{ code: string; expires_at: string } | null>(null);
   const [target, setTarget] = useState<(typeof devices)[number] | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState({ url: DEFAULT_GATEWAY_URL, token: "", profile: "", pin: "" });
 
   const pair = useMutation({
     mutationFn: () => makeCode(),
@@ -67,10 +79,13 @@ function DevicesPage() {
 
   function openBridge(device: (typeof devices)[number]) {
     const saved = loadBridgeSettings(device.id);
+    const defaults = gatewayDefaults();
     setForm(
       saved ?? {
-        ...emptyForm,
-        profile: device.name,
+        url: defaults.url,
+        token: defaults.token,
+        profile: defaults.profile || device.name,
+        pin: "",
       },
     );
     setTarget(device);
@@ -91,6 +106,10 @@ function DevicesPage() {
         throw new Error(result.message ?? "The phone refused the SSH connection.");
       }
       saveBridgeSettings(target.id, settings);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("gw.url", settings.url);
+        if (settings.profile) window.localStorage.setItem("gw.profile", settings.profile);
+      }
       return target;
     },
     onSuccess: (device) => {
