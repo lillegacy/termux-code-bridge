@@ -145,11 +145,20 @@ export function createBridgeClient(settings: BridgeSettings) {
 
 export function describeBridgeError(error: unknown): string {
   if (error instanceof GatewayError) {
-    if (error.kind === "unauthorized") return "Unauthorized — check the gateway bearer token.";
+    if (error.kind === "unauthorized") {
+      if (error.code === "invalid_pin") return "Incorrect bridge PIN.";
+      if (error.code === "pin_locked") {
+        return error.message || "Too many PIN attempts — wait a minute and try again.";
+      }
+      return "Unauthorized — check the gateway bearer token.";
+    }
     if (error.kind === "forbidden") return error.message || "The gateway rejected that command.";
     if (error.kind === "invalid_url") return error.message;
     if (error.kind === "network") {
       return "Could not reach the phone gateway. Check the URL, that the phone is on the same network, and that it is not blocked as mixed content.";
+    }
+    if (error.code === "not_found") {
+      return "The phone app does not expose /bridge/* — install Termux SSH Bridge 1.3.0 or newer.";
     }
     return error.message;
   }
