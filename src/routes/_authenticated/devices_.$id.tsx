@@ -80,22 +80,27 @@ function ConsolePage() {
   useEffect(() => {
     if (!settings) return;
     let cancelled = false;
+    let timer: number | undefined;
     const client = createBridgeClient(settings);
     const poll = async () => {
+      let idle = true;
       try {
         const result = await client.status();
         if (cancelled) return;
         setSession(result.session ?? null);
+        idle = result.session?.idle ?? true;
         setBridgeError("");
       } catch (error) {
         if (!cancelled) setBridgeError(describeBridgeError(error));
       }
+      if (!cancelled) {
+        timer = window.setTimeout(poll, (idle ? 30 : 5) * 1000);
+      }
     };
     void poll();
-    const timer = window.setInterval(poll, 5000);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      if (timer !== undefined) window.clearTimeout(timer);
     };
   }, [settings]);
 
