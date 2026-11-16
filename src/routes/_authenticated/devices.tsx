@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PlugZap, Plus, Smartphone, Trash2 } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
@@ -17,11 +17,13 @@ import {
 import { createPairingCode, listDevices, removeDevice } from "@/lib/devices.functions";
 import { isOnline, timeAgo } from "@/lib/time";
 import {
+  type BridgeSettings,
   createBridgeClient,
   describeBridgeError,
   loadBridgeSettings,
   saveBridgeSettings,
 } from "@/lib/bridge";
+import { GatewayError } from "@/lib/gateway-client";
 
 const devicesQuery = queryOptions({
   queryKey: ["devices"],
@@ -63,6 +65,43 @@ function DevicesPage() {
   const [code, setCode] = useState<{ code: string; expires_at: string } | null>(null);
   const [target, setTarget] = useState<(typeof devices)[number] | null>(null);
   const [form, setForm] = useState({ url: DEFAULT_GATEWAY_URL, token: "", profile: "", pin: "" });
+  const [reach, setReach] = useState<Record<string, "online" | "auth" | "offline">>({});
+  const deviceKey = devices.map((d) => d.id).join(",");
+
+  // The cloud `last_seen` only updates while the app polls, so also probe the
+  // bridge gateway directly from the browser: it is the truthful signal.
+  useEffect(() => {
+    const configured = deviceKey
+      .split(",")
+      .filter(Boolean)
+      .map((id) => ({ id, settings: loadBridgeSettings(id) }))
+      .filter(
+        (entry): entry is { id: string; settings: BridgeSettings } => entry.settings !== null,
+      );
+    if (configured.length === 0) return;
+    let cancelled = false;
+    const check = async () => {
+      const next: Record<string, "online" | "auth" | "offline"> = {};
+      await Promise.all(
+        configured.map(async ({ id, settings }) => {
+          try {
+            await createBridgeClient(settings).status();
+            next[id] = "online";
+          } catch (error) {
+            next[id] =
+              error instanceof GatewayError && error.kind === "unauthorized" ? "auth" : "offline";
+          }
+        }),
+      );
+      if (!cancelled) setReach(next);
+    };
+    void check();
+    const timer = window.setInterval(check, 15_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [deviceKey]);
 
   const pair = useMutation({
     mutationFn: () => makeCode(),
@@ -154,7 +193,28 @@ function DevicesPage() {
                         className={`h-2 w-2 rounded-full ${online ? "bg-primary shadow-glow" : "bg-muted-foreground/40"}`}
                       />
                       {online ? "online" : `last seen ${timeAgo(d.last_seen)}`}
-                      {configured && <span className="text-primary">· bridge ready</span>}
+                      {configured && (
+                        <span
+                          className={
+                            reach[d.id] === "online"
+                              ? "text-primary"
+                              : reach[d.id] === "auth"
+                                ? "text-warning"
+                                : reach[d.id] === "offline"
+                                  ? "text-destructive"
+                                  : "text-muted-foreground"
+                          }
+                        >
+                          ·{" "}
+                          {reach[d.id] === "online"
+                            ? "bridge online"
+                            : reach[d.id] === "auth"
+                              ? "token rejected"
+                              : reach[d.id] === "offline"
+                                ? "bridge unreachable"
+                                : "checking bridge"}
+                        </span>
+                      )}
                     </div>
                   </Link>
                   <Button
