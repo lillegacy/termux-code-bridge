@@ -48,7 +48,8 @@ The gateway app expects these endpoints and payloads:
 - `POST /connect` -> body is `{ "profile": "Default Tailscale Termux" }`
 - `POST /execute` -> body is `{ "command": "uname -a" }`
 - `POST /disconnect` -> closes the active SSH connection
-- `GET /bridge/status` -> current bridge session, or `null`
+- `GET /bridge/status` -> current bridge session, or `null`, plus the app version
+- `POST /bridge/ping` -> wake-up probe, returns `pong` and the app version
 - `POST /bridge/terminal/ticket` -> one-time ticket for the WebSocket terminal
 - `GET /bridge/terminal?ticket=...&cols=120&rows=32` -> WebSocket full PTY
 
@@ -98,6 +99,14 @@ Server frames are raw PTY bytes as binary frames; JSON text frames carry
 `resize` and `ping`. An open terminal keeps the bridge session alive, so a
 `tmux` or `vim` session is not dropped after 30 minutes idle. Up to four
 terminals can be open at once.
+
+### Wake ping
+
+The console's **Ping** button calls `POST /bridge/ping`. It wakes a running
+app, polls the cloud queue immediately instead of waiting for the next
+background tick, and returns the app version — so a stale install is obvious
+before anything else fails. It cannot start an app that Android has
+force-stopped; without push notifications, a stopped app has to be opened once.
 
 ### HTTPS pages and plain-HTTP gateways
 

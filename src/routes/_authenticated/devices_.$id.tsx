@@ -3,7 +3,7 @@ import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@ta
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Plug, PlugZap, RefreshCw, ShieldAlert } from "lucide-react";
+import { Activity, ArrowLeft, Loader2, Plug, PlugZap, RefreshCw, ShieldAlert } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { BridgeTerminal } from "@/components/BridgeTerminal";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,9 @@ function ConsolePage() {
   const [bridgeBusy, setBridgeBusy] = useState(false);
   const [bridgeLog, setBridgeLog] = useState<BridgeLogEntry[]>([]);
   const [mixedContent, setMixedContent] = useState(false);
+  const [gatewayVersion, setGatewayVersion] = useState("");
+  const [pinging, setPinging] = useState(false);
+  const [pingResult, setPingResult] = useState("");
 
   useEffect(() => {
     setSettings(loadBridgeSettings(id));
@@ -89,6 +92,7 @@ function ConsolePage() {
         const result = await client.status();
         if (cancelled) return;
         setSession(result.session ?? null);
+        if (result.version) setGatewayVersion(result.version);
         idle = result.session?.idle ?? true;
         setBridgeError("");
       } catch (error) {
@@ -161,6 +165,31 @@ function ConsolePage() {
     }
   }
 
+  async function pingGateway() {
+    if (!settings || pinging) return;
+    setPinging(true);
+    setPingResult("");
+    const started = performance.now();
+    try {
+      const result = await createBridgeClient(settings).ping();
+      const elapsed = Math.round(performance.now() - started);
+      if (result.version) setGatewayVersion(result.version);
+      setPingResult(
+        `pong ${elapsed}ms · ${result.version ?? "unknown build"} · ssh ${
+          result.sshConnected ? "up" : "down"
+        } · ${result.activeTerminals ?? 0} terminal(s)`,
+      );
+      setBridgeError("");
+    } catch (error) {
+      const message = describeBridgeError(error);
+      setPingResult("");
+      setBridgeError(message);
+      toast.error(message);
+    } finally {
+      setPinging(false);
+    }
+  }
+
   async function disconnectBridge() {
     if (!settings) return;
     setBridgeBusy(true);
@@ -230,6 +259,11 @@ function ConsolePage() {
             <div className="flex flex-wrap items-center gap-3">
               <PlugZap className="h-4 w-4 text-primary" />
               <span className="font-mono text-sm">direct bridge</span>
+              {gatewayVersion && (
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  gateway {gatewayVersion}
+                </span>
+              )}
               <span
                 className={`font-mono text-xs ${bridgeConnected ? "text-primary" : "text-muted-foreground"}`}
               >
@@ -240,6 +274,14 @@ function ConsolePage() {
                   : "not connected"}
               </span>
               <span className="ml-auto flex gap-2">
+                <Button size="sm" variant="ghost" onClick={pingGateway} disabled={pinging}>
+                  {pinging ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Activity className="h-4 w-4" />
+                  )}
+                  Ping
+                </Button>
                 {bridgeConnected ? (
                   <>
                     <Button
@@ -279,6 +321,7 @@ function ConsolePage() {
                 block the request. Use a tunnel or open the webapp over HTTP on the LAN.
               </p>
             )}
+            {pingResult && <p className="mt-3 font-mono text-xs text-primary">{pingResult}</p>}
             {bridgeError && (
               <p className="mt-3 flex items-center gap-2 text-xs text-destructive">
                 <ShieldAlert className="h-4 w-4" /> {bridgeError}

@@ -37,8 +37,19 @@ export interface BridgeConnectResponse {
 
 export interface BridgeStatusResponse {
   ok?: boolean;
+  version?: string;
   connected?: boolean;
   session?: BridgeSessionState | null;
+}
+
+export interface BridgePingResponse {
+  ok?: boolean;
+  pong?: boolean;
+  version?: string;
+  sshConnected?: boolean;
+  sshConnecting?: boolean;
+  activeTerminals?: number;
+  serverTime?: string;
 }
 
 export interface BridgeExecuteResponse {
@@ -155,6 +166,7 @@ export function createBridgeClient(settings: BridgeSettings) {
         { method: "POST" },
         token,
       ),
+    ping: () => requestGateway<BridgePingResponse>(base, "/bridge/ping", { method: "POST" }, token),
     terminalTicket: () =>
       requestGateway<BridgeTerminalTicket>(
         base,
@@ -207,7 +219,7 @@ export function describeBridgeError(error: unknown): string {
       return "Could not reach the phone gateway. Check the URL, that the phone is on the same network, and that it is not blocked as mixed content.";
     }
     if (error.code === "not_found") {
-      return "The phone app does not expose /bridge/* — install Termux SSH Bridge 1.3.0 or newer.";
+      return "The phone app does not expose /bridge/* — update Termux SSH Bridge (the version is shown in the app's API tab). The web terminal needs 1.5.0 or newer.";
     }
     return error.message;
   }
