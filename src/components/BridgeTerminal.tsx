@@ -142,7 +142,7 @@ export function BridgeTerminal({
             setStatus("open");
             term.focus();
             if (tmuxRef.current) {
-              socket.send(JSON.stringify({ type: "input", data: "tmux new -A -s web\r" }));
+              socket.send(JSON.stringify({ type: "input", data: "tmux new -A -s live\r" }));
             }
             break;
           case "exit":
@@ -230,7 +230,7 @@ export function BridgeTerminal({
             checked={useTmux}
             onChange={(event) => setUseTmux(event.target.checked)}
           />
-          tmux new -A -s web
+          tmux new -A -s live
         </label>
         {live ? (
           <Button size="sm" variant="outline" onClick={close}>
