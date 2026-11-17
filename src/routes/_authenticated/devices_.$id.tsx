@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Plug, PlugZap, RefreshCw, ShieldAlert } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
+import { BridgeTerminal } from "@/components/BridgeTerminal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getDevice, renameDevice, sendCommand } from "@/lib/devices.functions";
@@ -338,6 +339,8 @@ function ConsolePage() {
                 </div>
               ))}
             </div>
+
+            <BridgeTerminal settings={settings} connected={bridgeConnected} />
           </section>
         ) : (
           <section className="mt-6 rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">

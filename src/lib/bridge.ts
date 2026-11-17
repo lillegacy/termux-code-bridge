@@ -49,6 +49,21 @@ export interface BridgeExecuteResponse {
   session?: BridgeSessionState | null;
 }
 
+export interface BridgeTerminalTicket {
+  ok?: boolean;
+  ticket?: string;
+  expiresInSeconds?: number;
+  maxTerminals?: number;
+  activeTerminals?: number;
+}
+
+export interface BridgeTerminalStatus {
+  ok?: boolean;
+  activeTerminals?: number;
+  maxTerminals?: number;
+  available?: boolean;
+}
+
 const storageKey = (deviceId: string) => `tsb.bridge.${deviceId}`;
 
 export function loadBridgeSettings(deviceId: string): BridgeSettings | null {
@@ -140,7 +155,41 @@ export function createBridgeClient(settings: BridgeSettings) {
         { method: "POST" },
         token,
       ),
+    terminalTicket: () =>
+      requestGateway<BridgeTerminalTicket>(
+        base,
+        "/bridge/terminal/ticket",
+        { method: "POST" },
+        token,
+      ),
+    terminalStatus: () =>
+      requestGateway<BridgeTerminalStatus>(
+        base,
+        "/bridge/terminal/status",
+        { method: "GET" },
+        token,
+      ),
   };
+}
+
+// Browsers cannot set an Authorization header on a WebSocket handshake, so the
+// client fetches a one-time ticket over normal HTTP and passes it in the URL.
+export function bridgeWebSocketUrl(
+  settings: BridgeSettings,
+  ticket: string,
+  columns: number,
+  rows: number,
+): string {
+  const url = new URL(normalizeGatewayUrl(settings.url));
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  const prefix = url.pathname.replace(/\/+$/, "");
+  url.pathname = `${prefix}/bridge/terminal`;
+  url.search = new URLSearchParams({
+    ticket,
+    cols: String(columns),
+    rows: String(rows),
+  }).toString();
+  return url.toString();
 }
 
 export function describeBridgeError(error: unknown): string {
