@@ -166,10 +166,13 @@ export function BridgeTerminal({
         setMessage("The WebSocket connection to the phone failed.");
       };
 
-      socket.onclose = () => {
+      socket.onclose = (event) => {
         if (socketRef.current !== socket) return;
         socketRef.current = null;
         setStatus((current) => (current === "error" ? current : "closed"));
+        if (event.reason) {
+          setMessage((current) => current || event.reason);
+        }
       };
 
       socket.onopen = () => {
