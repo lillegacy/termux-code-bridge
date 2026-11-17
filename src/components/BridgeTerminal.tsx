@@ -140,6 +140,7 @@ export function BridgeTerminal({
           case "ready":
             term.reset();
             setStatus("open");
+            term.focus();
             if (tmuxRef.current) {
               socket.send(JSON.stringify({ type: "input", data: "tmux new -A -s web\r" }));
             }
