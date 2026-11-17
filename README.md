@@ -48,6 +48,9 @@ The gateway app expects these endpoints and payloads:
 - `POST /connect` -> body is `{ "profile": "Default Tailscale Termux" }`
 - `POST /execute` -> body is `{ "command": "uname -a" }`
 - `POST /disconnect` -> closes the active SSH connection
+- `GET /bridge/status` -> current bridge session, or `null`
+- `POST /bridge/terminal/ticket` -> one-time ticket for the WebSocket terminal
+- `GET /bridge/terminal?ticket=...&cols=120&rows=32` -> WebSocket full PTY
 
 Example response from the phone gateway:
 
@@ -75,7 +78,34 @@ shown in the phone app's API tab, then enter a stored profile name to connect.
 The token remains in browser memory unless you explicitly opt in to remembering
 it. A hosted HTTPS page cannot call a remote plain-HTTP gateway; use an HTTPS
 tunnel/reverse proxy or a local SSH tunnel. The phone gateway enforces its own
-command allowlist.
+command ban list.
 
 The **Devices** dashboard is a separate cloud command-queue feature and does
 not connect to the phone app's gateway API.
+
+### Web terminal
+
+The device console opens a real PTY on the phone's SSH connection. The browser
+requests a single-use ticket with the bearer token (WebSocket handshakes cannot
+carry headers), then upgrades to:
+
+```
+ws://HOST:8765/bridge/terminal?ticket=TICKET&cols=120&rows=32
+```
+
+Server frames are raw PTY bytes as binary frames; JSON text frames carry
+`ready`, `exit` and `error` control messages. Client frames are JSON `input`,
+`resize` and `ping`. An open terminal keeps the bridge session alive, so a
+`tmux` or `vim` session is not dropped after 30 minutes idle. Up to four
+terminals can be open at once.
+
+### HTTPS pages and plain-HTTP gateways
+
+Browsers block `http://` fetches and `ws://` sockets from an HTTPS page (mixed
+content). Either:
+
+- open the webapp over plain HTTP on the same LAN, or
+- put an HTTPS tunnel or reverse proxy in front of the gateway and enter that
+  `https://` URL in Connect. The terminal automatically uses `wss://`.
+
+The app shows a warning when it detects a mixed-content configuration.
